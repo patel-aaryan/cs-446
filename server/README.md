@@ -64,9 +64,9 @@ app/
 └── config/         # Configuration - settings & clients
 ```
 
-| Layer            | Responsibility                                  |
-| ---------------- | ----------------------------------------------- |
-| **Routers**      | Define API endpoints, delegate to controllers   |
-| **Controllers**  | Handle HTTP concerns (status codes, exceptions) |
-| **Services**     | Business logic, orchestrate repositories        |
-| **Repositories** | Database queries via Supabase client            |
+| Layer            | Responsibility                                                          |
+| ---------------- | ----------------------------------------------------------------------- |
+| **Routers**      | Define API endpoints, delegate to controllers                           |
+| **Controllers**  | Handle HTTP concerns (status codes, exceptions, input validation, auth) |
+| **Services**     | Handling business logic and orchestrate repositories                    |
+| **Repositories** | Executing database queries via Supabase client                          |
