@@ -1,0 +1,39 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Built dex and class files
+*.dex
+*.class
+
+# Gradle
+.gradle
+/build
+
+# Local configuration (SDK path, etc.)
+local.properties
+
+# IDE - IntelliJ / Android Studio
+*.iml
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+
+# Keystore files (don't commit release keystores or keys)
+*.jks
+*.keystore
+
+# External native build
+.externalNativeBuild
+.cxx
+
+# Captures (screenshots, etc.)
+/captures
+
+# OS
+.DS_Store
