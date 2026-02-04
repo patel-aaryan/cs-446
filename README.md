@@ -1,4 +1,4 @@
-# Snack Overflow- Memento
+# Snack Overflow - Memento
 
 Memento is a mobile application that allows users to upload, store, and revisit personal and shared memories through an interactive and creative interface.
 
