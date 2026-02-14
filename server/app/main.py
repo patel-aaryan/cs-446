@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config.settings import get_settings
-from app.routers import health
+from app.routers import health, auth
 
 settings = get_settings()
 
 app = FastAPI(
     title="Memento API",
-    description="FastAPI server with Supabase backend",
+    description="FastAPI server with Neon database backend",
     version="1.0.0",
     debug=settings.debug,
 )
@@ -23,6 +23,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(health.router)
+app.include_router(auth.router)
 
 
 @app.get("/")
