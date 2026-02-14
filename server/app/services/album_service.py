@@ -1,0 +1,168 @@
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
+from typing import List
+from app.repositories import album_repository, album_member_repository
+from app.schemas.album import AlbumCreate, AlbumUpdate, AlbumResponse, AlbumMemberAdd
+
+
+def create_album(db: Session, album_data: AlbumCreate, owner_id: int) -> AlbumResponse:
+    """Create a new album and add owner as a member."""
+    # Create the album
+    album = album_repository.create_album(db, album_data.name, owner_id)
+    if not album:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create album"
+        )
+    
+    # Add owner as a member
+    album_member_repository.add_album_member(db, album["id"], owner_id)
+    
+    return AlbumResponse(**album)
+
+
+def get_album(db: Session, album_id: int, user_id: int) -> AlbumResponse:
+    """Get an album by ID. User must be owner or member."""
+    album = album_repository.get_album_by_id(db, album_id)
+    if not album:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Album not found"
+        )
+    
+    # Check if user is owner or member
+    is_owner = album["owner_id"] == user_id
+    is_member = album_member_repository.is_album_member(db, album_id, user_id)
+    
+    if not (is_owner or is_member):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to this album"
+        )
+    
+    return AlbumResponse(**album)
+
+
+def update_album(db: Session, album_id: int, album_data: AlbumUpdate, user_id: int) -> AlbumResponse:
+    """Update an album. Only owner can update."""
+    album = album_repository.get_album_by_id(db, album_id)
+    if not album:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Album not found"
+        )
+    
+    # Check if user is owner
+    if album["owner_id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the album owner can update the album"
+        )
+    
+    # Update album
+    if album_data.name is None:
+        return AlbumResponse(**album)
+    
+    updated_album = album_repository.update_album(db, album_id, album_data.name)
+    if not updated_album:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update album"
+        )
+    
+    return AlbumResponse(**updated_album)
+
+
+def delete_album(db: Session, album_id: int, user_id: int) -> None:
+    """Delete an album. Only owner can delete."""
+    album = album_repository.get_album_by_id(db, album_id)
+    if not album:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Album not found"
+        )
+    
+    # Check if user is owner
+    if album["owner_id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the album owner can delete the album"
+        )
+    
+    success = album_repository.delete_album(db, album_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete album"
+        )
+
+
+def get_user_albums(db: Session, user_id: int) -> List[AlbumResponse]:
+    """Get all albums for a user (owned or member)."""
+    albums = album_repository.get_user_albums(db, user_id)
+    return [AlbumResponse(**album) for album in albums]
+
+
+def add_album_member(db: Session, album_id: int, member_data: AlbumMemberAdd, user_id: int) -> dict:
+    """Add a member to an album. Only owner can add members."""
+    album = album_repository.get_album_by_id(db, album_id)
+    if not album:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Album not found"
+        )
+    
+    # Check if user is owner
+    if album["owner_id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the album owner can add members"
+        )
+    
+    # Don't allow adding the owner as a member (they're already added during creation)
+    if album["owner_id"] == member_data.user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Album owner is already a member"
+        )
+    
+    member = album_member_repository.add_album_member(db, album_id, member_data.user_id)
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already a member of this album"
+        )
+    
+    return member
+
+
+def remove_album_member(db: Session, album_id: int, member_user_id: int, user_id: int) -> None:
+    """Remove a member from an album. Only owner can remove members."""
+    album = album_repository.get_album_by_id(db, album_id)
+    if not album:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Album not found"
+        )
+    
+    # Check if user is owner
+    if album["owner_id"] != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the album owner can remove members"
+        )
+    
+    # Don't allow removing the owner
+    if album["owner_id"] == member_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove the album owner"
+        )
+    
+    success = album_member_repository.remove_album_member(db, album_id, member_user_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found in album"
+        )
+

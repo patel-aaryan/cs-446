@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config.settings import get_settings
-from app.routers import health, auth
+from app.routers import health, auth, albums, images
 
 settings = get_settings()
 
@@ -33,12 +33,30 @@ def custom_openapi():
         }
     }
     
-    # Add security requirement to protected endpoints
-    # Find the /auth/me endpoint and add security requirement
+    # Add security requirement to all protected endpoints
     if "paths" in openapi_schema:
-        if "/auth/me" in openapi_schema["paths"]:
-            if "get" in openapi_schema["paths"]["/auth/me"]:
-                openapi_schema["paths"]["/auth/me"]["get"]["security"] = [{"bearerAuth": []}]
+        # List of paths that require authentication (exact matches and patterns)
+        protected_path_patterns = [
+            "/auth/me",
+            "/albums",
+            "/images",
+        ]
+        
+        for path, methods in openapi_schema["paths"].items():
+            # Check if path should be protected
+            is_protected = False
+            
+            # Check exact match or if path starts with any protected pattern
+            for pattern in protected_path_patterns:
+                if path == pattern or path.startswith(pattern + "/"):
+                    is_protected = True
+                    break
+            
+            if is_protected:
+                # Add security to all HTTP methods for this path
+                for method in ["get", "post", "put", "delete", "patch"]:
+                    if method in methods:
+                        methods[method]["security"] = [{"bearerAuth": []}]
     
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -58,6 +76,8 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router)
 app.include_router(auth.router)
+app.include_router(albums.router)
+app.include_router(images.router)
 
 
 @app.get("/")
