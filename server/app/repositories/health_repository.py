@@ -1,3 +1,4 @@
+
 from sqlalchemy import text
 from app.config.db import get_db
 
