@@ -32,7 +32,8 @@ def create_image(db: Session, image_data: ImageCreate, user_id: int) -> ImageRes
         image_url=image_data.image_url,
         user_id=user_id,
         caption=image_data.caption,
-        location=image_data.location
+        latitude=image_data.latitude,
+        longitude=image_data.longitude
     )
     
     if not image:
@@ -96,7 +97,8 @@ def update_image(db: Session, image_id: int, image_data: ImageUpdate, user_id: i
         image_id=image_id,
         caption=image_data.caption,
         image_url=image_data.image_url,
-        location=image_data.location
+        latitude=image_data.latitude,
+        longitude=image_data.longitude
     )
     
     if not updated_image:

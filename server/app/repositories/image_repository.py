@@ -9,13 +9,14 @@ def create_image(
     image_url: str,
     user_id: int,
     caption: Optional[str] = None,
-    location: Optional[str] = None
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None
 ) -> Optional[dict]:
     """Create a new image."""
     query = text("""
-        INSERT INTO images (album_id, caption, image_url, location, user_id)
-        VALUES (:album_id, :caption, :image_url, :location, :user_id)
-        RETURNING id, album_id, caption, image_url, location, date_added, user_id, created_at, updated_at
+        INSERT INTO images (album_id, caption, image_url, latitude, longitude, user_id)
+        VALUES (:album_id, :caption, :image_url, :latitude, :longitude, :user_id)
+        RETURNING id, album_id, caption, image_url, latitude, longitude, date_added, user_id, created_at, updated_at
     """)
     
     try:
@@ -23,7 +24,8 @@ def create_image(
             "album_id": album_id,
             "caption": caption,
             "image_url": image_url,
-            "location": location,
+            "latitude": latitude,
+            "longitude": longitude,
             "user_id": user_id
         })
         db.commit()
@@ -35,11 +37,12 @@ def create_image(
                 "album_id": row[1],
                 "caption": row[2],
                 "image_url": row[3],
-                "location": row[4],
-                "date_added": str(row[5]),
-                "user_id": row[6],
-                "created_at": str(row[7]),
-                "updated_at": str(row[8])
+                "latitude": float(row[4]) if row[4] is not None else None,
+                "longitude": float(row[5]) if row[5] is not None else None,
+                "date_added": str(row[6]),
+                "user_id": row[7],
+                "created_at": str(row[8]),
+                "updated_at": str(row[9])
             }
         return None
     except Exception as e:
@@ -50,7 +53,7 @@ def create_image(
 def get_image_by_id(db: Session, image_id: int) -> Optional[dict]:
     """Get an image by ID."""
     query = text("""
-        SELECT id, album_id, caption, image_url, location, date_added, user_id, created_at, updated_at
+        SELECT id, album_id, caption, image_url, latitude, longitude, date_added, user_id, created_at, updated_at
         FROM images
         WHERE id = :image_id
     """)
@@ -64,11 +67,12 @@ def get_image_by_id(db: Session, image_id: int) -> Optional[dict]:
             "album_id": row[1],
             "caption": row[2],
             "image_url": row[3],
-            "location": row[4],
-            "date_added": str(row[5]),
-            "user_id": row[6],
-            "created_at": str(row[7]),
-            "updated_at": str(row[8])
+            "latitude": float(row[4]) if row[4] is not None else None,
+            "longitude": float(row[5]) if row[5] is not None else None,
+            "date_added": str(row[6]),
+            "user_id": row[7],
+            "created_at": str(row[8]),
+            "updated_at": str(row[9])
         }
     return None
 
@@ -78,7 +82,8 @@ def update_image(
     image_id: int,
     caption: Optional[str] = None,
     image_url: Optional[str] = None,
-    location: Optional[str] = None
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None
 ) -> Optional[dict]:
     """Update an image."""
     # Build dynamic update query
@@ -93,9 +98,13 @@ def update_image(
         updates.append("image_url = :image_url")
         params["image_url"] = image_url
     
-    if location is not None:
-        updates.append("location = :location")
-        params["location"] = location
+    if latitude is not None:
+        updates.append("latitude = :latitude")
+        params["latitude"] = latitude
+    
+    if longitude is not None:
+        updates.append("longitude = :longitude")
+        params["longitude"] = longitude
     
     if not updates:
         # No updates to make, just return the existing image
@@ -105,7 +114,7 @@ def update_image(
         UPDATE images
         SET {', '.join(updates)}
         WHERE id = :image_id
-        RETURNING id, album_id, caption, image_url, location, date_added, user_id, created_at, updated_at
+        RETURNING id, album_id, caption, image_url, latitude, longitude, date_added, user_id, created_at, updated_at
     """)
     
     try:
@@ -119,11 +128,12 @@ def update_image(
                 "album_id": row[1],
                 "caption": row[2],
                 "image_url": row[3],
-                "location": row[4],
-                "date_added": str(row[5]),
-                "user_id": row[6],
-                "created_at": str(row[7]),
-                "updated_at": str(row[8])
+                "latitude": float(row[4]) if row[4] is not None else None,
+                "longitude": float(row[5]) if row[5] is not None else None,
+                "date_added": str(row[6]),
+                "user_id": row[7],
+                "created_at": str(row[8]),
+                "updated_at": str(row[9])
             }
         return None
     except Exception as e:
@@ -150,7 +160,7 @@ def delete_image(db: Session, image_id: int) -> bool:
 def get_album_images(db: Session, album_id: int) -> List[dict]:
     """Get all images in an album."""
     query = text("""
-        SELECT id, album_id, caption, image_url, location, date_added, user_id, created_at, updated_at
+        SELECT id, album_id, caption, image_url, latitude, longitude, date_added, user_id, created_at, updated_at
         FROM images
         WHERE album_id = :album_id
         ORDER BY date_added DESC
@@ -165,11 +175,12 @@ def get_album_images(db: Session, album_id: int) -> List[dict]:
             "album_id": row[1],
             "caption": row[2],
             "image_url": row[3],
-            "location": row[4],
-            "date_added": str(row[5]),
-            "user_id": row[6],
-            "created_at": str(row[7]),
-            "updated_at": str(row[8])
+            "latitude": float(row[4]) if row[4] is not None else None,
+            "longitude": float(row[5]) if row[5] is not None else None,
+            "date_added": str(row[6]),
+            "user_id": row[7],
+            "created_at": str(row[8]),
+            "updated_at": str(row[9])
         })
     
     return images

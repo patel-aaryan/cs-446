@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config.settings import get_settings
-from app.routers import health, auth, albums, images
+from app.routers import health, auth, albums, images, upload
 
 settings = get_settings()
 
@@ -40,6 +40,7 @@ def custom_openapi():
             "/auth/me",
             "/albums",
             "/images",
+            "/upload",
         ]
         
         for path, methods in openapi_schema["paths"].items():
@@ -78,6 +79,7 @@ app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(albums.router)
 app.include_router(images.router)
+app.include_router(upload.router)
 
 
 @app.get("/")
